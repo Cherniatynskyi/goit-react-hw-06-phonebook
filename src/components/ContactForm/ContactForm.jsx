@@ -1,10 +1,17 @@
 import { useState} from 'react'
+import {useSelector, useDispatch} from 'react-redux'
+import { addContact} from "../../redux/contactsSlice";
+import { nanoid } from 'nanoid'
+import { Notify } from 'notiflix/build/notiflix-notify-aio';
 import css from './ContactForm.module.css'
 
-export const ContactForm = ({onSubmit}) => {
+export const ContactForm = () => {
 
     const [name, setName] = useState('')
     const [number, setNumber] = useState('')
+
+    const stateContacts = useSelector(state => state.contacts.contacts)
+    const dispatch = useDispatch();
 
     const handleChange = e => {
         const name = e.target.name
@@ -23,16 +30,34 @@ export const ContactForm = ({onSubmit}) => {
 
     const onSubmitForm = e => {
         e.preventDefault()
-        onSubmit({name, number})
+        if (!checkExistHandler(name)) {
+            return
+          }
+          const contact = {
+            id: nanoid(),
+            name,
+            number
+          }
+        dispatch(addContact(contact))
         resetForm()
     }
+
+    const checkExistHandler = name => {
+        const res = stateContacts.find((value) => {
+          return value.name === name 
+        })
+        if (res) {
+            Notify.failure(`${name} is already in contacts list`);
+            return false
+          }
+          return true
+        }
 
     const resetForm = () => {
         setName('')
         setNumber('')
     }
 
-    
         return(
         <form className={css.form} onSubmit={onSubmitForm}>
             <label className={css.label} htmlFor="name">
